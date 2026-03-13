@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Forge — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8f7f5;
+    --surface: #ffffff;
+    --border: #ebebeb;
+    --text: #1a1a1a;
+    --text-secondary: #717171;
+    --text-muted: #b0b0b0;
+    --accent: #6366f1;
+    --accent-light: #eef2ff;
+    --accent-hover: #4f46e5;
+    --green: #22c55e;
+    --green-light: #f0fdf4;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    backdrop-filter: blur(12px);
+    background: rgba(255,255,255,.92);
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(99,102,241,.3);
+  }
+  .logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.4px; }
+  .logo-text span { color: var(--text-secondary); font-weight: 400; }
+  .header-stats {
+    display: flex; gap: 16px;
+  }
+  .stat-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .stat-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  /* ── GENERATE SECTION ── */
+  .gen-section {
+    margin: 20px 24px 0;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    box-shadow: 0 4px 20px rgba(99,102,241,.25);
+  }
+  .gen-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 12px; }
+  .gen-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .gen-input {
+    flex: 1; min-width: 180px;
+    padding: 10px 14px;
+    border: 1.5px solid rgba(255,255,255,.2);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  .gen-input::placeholder { color: rgba(255,255,255,.55); }
+  .gen-input:focus { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.2); }
+  .gen-select {
+    padding: 10px 12px;
+    border: 1.5px solid rgba(255,255,255,.2);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .gen-select option { background: #4f46e5; color: #fff; }
+  .gen-btn {
+    padding: 10px 20px;
+    background: #fff;
+    color: #4f46e5;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s, opacity .15s;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+  .gen-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+  .gen-btn:active { transform: translateY(0); }
+  .gen-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+  .gen-status { margin-top: 10px; font-size: 12px; color: rgba(255,255,255,.8); min-height: 16px; }
+  .gen-status.ok { color: #86efac; }
+  .gen-status.err { color: #fca5a5; }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 16px 24px 4px;
+    flex-wrap: wrap;
+  }
+  .tabs { display: flex; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
+  .tab {
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all .15s;
+  }
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+  .search-wrap { flex: 1; min-width: 180px; position: relative; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+  .search-input {
+    width: 100%;
+    padding: 8px 12px 8px 32px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+
+  /* ── CARDS GRID ── */
+  .cards {
+    padding: 12px 24px 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow .2s, transform .2s;
+    position: relative;
+  }
+  .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .card.archived { opacity: .6; }
+
+  /* Цветная полоска сверху */
+  .card-accent-bar {
+    height: 3px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  }
+  .card-accent-bar.octopus { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+  .card-accent-bar.octopus-glass { background: linear-gradient(90deg, #6C63FF, #00D4FF); box-shadow: 0 0 8px rgba(108,99,255,.4); }
+  .card-accent-bar.archived { background: var(--border); }
+
+  .card-body { padding: 16px; }
+  .card-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .card-name { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; flex: 1; line-height: 1.3; }
+  .badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 6px;
+    text-transform: uppercase; letter-spacing: .6px;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .badge.telegraph { background: #1a1a1a; color: #fff; }
+  .badge.octopus { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; }
+  .badge.octopus-glass { background: linear-gradient(135deg, #6C63FF, #00D4FF); color: #fff; }
+
+  /* Theme quick-filters */
+  .theme-filters { display: flex; align-items: center; gap: 6px; padding: 0 16px 12px; flex-wrap: wrap; }
+  .theme-filter-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .theme-filter-btn { padding: 4px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text-secondary); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .15s; font-family: inherit; }
+  .theme-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .theme-filter-btn.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .theme-filter-btn.glass.active { background: rgba(108,99,255,.1); border-color: #6C63FF; color: #6C63FF; }
+
+  /* Export button */
+  .btn.export { font-size: 11px; padding: 5px 10px; opacity: .75; }
+  .btn.export:hover { opacity: 1; }
+
+  .card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .status-pill.live { background: var(--green-light); color: #16a34a; }
+  .status-pill.archive { background: #f5f5f5; color: var(--text-muted); }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .status-pill.live .status-dot { background: var(--green); }
+  .status-pill.archive .status-dot { background: var(--text-muted); }
+
+  .meta-sep { color: var(--border); }
+  .card-date, .card-views { font-size: 12px; color: var(--text-muted); }
+  .label-badge {
+    font-size: 11px; padding: 2px 7px;
+    background: var(--accent-light); color: var(--accent);
+    border-radius: 6px; font-weight: 500;
+  }
+  .card-slug {
+    font-size: 11px; color: var(--text-muted);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    margin-bottom: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ── CARD ACTIONS ── */
+  .card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 500; font-family: inherit;
+    cursor: pointer; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text);
+    transition: all .15s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg); border-color: #d0d0d0; }
+  .btn.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn.danger { color: var(--red); border-color: #fecaca; }
+  .btn.danger:hover { background: var(--red-light); }
+
+  /* ── EDIT PANEL ── */
+  .card-edit {
+    border-top: 1px solid var(--bg);
+    padding: 12px 16px 14px;
+    background: var(--bg);
+    display: none;
+  }
+  .card-edit.open { display: block; }
+  .edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .edit-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); min-width: 44px; text-transform: uppercase; letter-spacing: .5px; }
+  .edit-input {
+    flex: 1; padding: 7px 10px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 13px; font-family: inherit;
+    background: var(--surface); color: var(--text);
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .edit-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+  .edit-select {
+    padding: 7px 10px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 13px;
+    font-family: inherit; background: var(--surface); outline: none; cursor: pointer;
+  }
+  .save-btn {
+    padding: 7px 16px; background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: background .15s;
+  }
+  .save-btn:hover { background: var(--accent-hover); }
+
+  /* ── QR OVERLAY ── */
+  .overlay-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 999;
+    padding: 20px;
+  }
+  .overlay-backdrop.open { display: flex; }
+  .qr-box {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 28px;
+    text-align: center;
+    max-width: 280px; width: 100%;
+    box-shadow: var(--shadow-lg);
+    animation: popIn .2s ease;
+  }
+  @keyframes popIn { from { transform: scale(.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .qr-box canvas { display: block; margin: 0 auto 14px; border-radius: 10px; }
+  .qr-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .qr-url { font-size: 11px; color: var(--text-muted); word-break: break-all; margin-bottom: 18px; }
+  .qr-close {
+    width: 100%; padding: 10px;
+    background: var(--text); color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: opacity .15s;
+  }
+  .qr-close:hover { opacity: .85; }
+  /* ── PREVIEW MODAL ── */
+  .preview-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; padding: 16px;
+  }
+  .preview-backdrop.open { display: flex; }
+  .preview-box {
+    background: #fff; border-radius: 16px;
+    width: min(95vw, 1100px); height: min(88vh, 800px);
+    box-shadow: 0 24px 80px rgba(0,0,0,.4);
+    display: flex; flex-direction: column;
+    animation: popIn .2s ease; overflow: hidden;
+  }
+  .preview-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb; flex-shrink: 0;
+  }
+  .preview-url {
+    flex: 1; font-size: 12px; color: #6b7280;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 5px 10px;
+  }
+  .preview-btn-open {
+    padding: 6px 12px; border-radius: 8px; border: none;
+    background: var(--accent); color: #fff; font-size: 12px;
+    font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap;
+  }
+  .preview-close {
+    width: 28px; height: 28px; border-radius: 50%; border: none;
+    background: #e5e7eb; color: #374151; font-size: 16px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background .15s;
+  }
+  .preview-close:hover { background: #d1d5db; }
+  .preview-iframe {
+    flex: 1; width: 100%; border: none;
+  }
+
+  /* ── CONFIRM ── */
+  .confirm-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(4px);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 998; padding: 20px;
+  }
+  .confirm-backdrop.open { display: flex; }
+  .confirm-box {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%; max-width: 380px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp .2s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .confirm-icon { font-size: 32px; margin-bottom: 10px; }
+  .confirm-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .confirm-text { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
+  .confirm-actions { display: flex; gap: 10px; }
+  .confirm-cancel {
+    flex: 1; padding: 12px;
+    background: var(--bg); color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: 12px; font-size: 15px; font-weight: 500;
+    font-family: inherit; cursor: pointer;
+  }
+  .confirm-ok {
+    flex: 1; padding: 12px;
+    background: var(--red); color: #fff;
+    border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: .6; }
+  .empty-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .empty-sub { font-size: 14px; }
+
+  /* ── SWIPE ── */
+  .swipe-wrapper { position: relative; overflow: hidden; border-radius: var(--radius); }
+  .swipe-bg {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+    background: var(--red);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; font-weight: 600; gap: 4px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .swipe-bg::before { content: '🗑'; font-size: 18px; }
+  .card-inner { transition: transform .2s cubic-bezier(.4,0,.2,1); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .header { padding: 0 16px; }
+    .header-stats .stat-chip:last-child { display: none; }
+    .gen-section { margin: 14px 16px 0; padding: 16px; }
+    .gen-row { flex-direction: column; }
+    .toolbar { padding: 12px 16px 4px; }
+    .cards { padding: 10px 16px 80px; grid-template-columns: 1fr; }
+  }
+
+  /* ── LOADING SKELETON ── */
+  .skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ── BULK SELECT ── */
+  .btn-select { padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-secondary); transition: all .15s; }
+  .btn-select.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+  .card-checkbox-wrap { position: absolute; top: 12px; right: 12px; z-index: 10; display: none; }
+  .bulk-mode .card-checkbox-wrap { display: block; }
+  .card-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: var(--accent); }
+  .bulk-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    background: var(--text); color: #fff;
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 12px;
+    transform: translateY(100%); transition: transform .25s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 -4px 24px rgba(0,0,0,.2);
+  }
+  .bulk-bar.open { transform: translateY(0); }
+  .bulk-count { flex: 1; font-size: 14px; font-weight: 600; }
+  .bulk-btn {
+    padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; border: none; transition: opacity .15s;
+  }
+  .bulk-btn:hover { opacity: .85; }
+  .bulk-btn.archive { background: rgba(255,255,255,.15); color: #fff; }
+  .bulk-btn.del { background: var(--red); color: #fff; }
+  .bulk-btn.cancel { background: rgba(255,255,255,.08); color: rgba(255,255,255,.6); }
+
+  /* ── CONTENT EDIT FORM ── */
+  .content-edit-section {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px 14px;
+    background: var(--surface);
+    display: none;
+  }
+  .content-edit-section.open { display: block; }
+  .content-section-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+    color: var(--text-muted); margin-bottom: 10px;
+  }
+  .content-field { margin-bottom: 8px; }
+  .content-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+  .content-field input, .content-field textarea {
+    width: 100%; padding: 7px 10px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 13px; font-family: inherit;
+    background: var(--bg); color: var(--text);
+    outline: none; transition: border-color .15s, box-shadow .15s;
+    resize: vertical;
+  }
+  .content-field input:focus, .content-field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.1); background: #fff; }
+  .content-actions-row { display: flex; gap: 8px; margin-top: 10px; }
+  .content-save-btn {
+    flex: 1; padding: 8px; background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: background .15s;
+  }
+  .content-save-btn:hover { background: var(--accent-hover); }
+  .content-save-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .content-status { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; }
+  .content-status.ok { color: var(--green); }
+  .content-status.err { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Design Forge <span>/ Admin</span></div>
+  </div>
+  <div class="header-stats" id="headerStats">
+    <div class="stat-chip"><span class="dot"></span><span id="statLive">—</span> активных</div>
+    <div class="stat-chip">👁 <span id="statViews">—</span> просмотров</div>
+  </div>
+</div>
+
+<!-- Generate -->
+<div class="gen-section">
+  <div class="gen-label">✦ Новый лендинг</div>
+  <div class="gen-row">
+    <input class="gen-input" id="genDesc" placeholder="Опиши продукт одной фразой..." />
+    <select class="gen-select" id="genTheme">
+      <option value="telegraph">Telegraph</option>
+      <option value="octopus">Octopus</option>
+      <option value="octopus-glass">Octopus Glass ✦</option>
+    </select>
+    <button class="gen-btn" id="genBtn" onclick="generateLanding()">Создать →</button>
+  </div>
+  <div class="gen-status" id="genStatus"></div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('live', this)">Активные</button>
+    <button class="tab" onclick="switchTab('archive', this)">Архив</button>
+    <button class="tab" onclick="switchTab('all', this)">Все</button>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" placeholder="Поиск..." oninput="filterCards()" />
+  </div>
+  <button class="btn-select" id="bulkToggle" onclick="toggleBulkMode()">Выбрать</button>
+</div>
+
+<!-- Theme quick-filters -->
+<div class="theme-filters" id="themeFilters">
+  <span class="theme-filter-label">Тема:</span>
+  <button class="theme-filter-btn" onclick="setThemeFilter('telegraph', this)">Telegraph</button>
+  <button class="theme-filter-btn" onclick="setThemeFilter('octopus', this)">Octopus</button>
+  <button class="theme-filter-btn glass" onclick="setThemeFilter('octopus-glass', this)">Glass ✦</button>
+</div>
+
+<!-- Bulk action bar -->
+<div class="bulk-bar" id="bulkBar">
+  <span class="bulk-count" id="bulkCount">0 выбрано</span>
+  <button class="bulk-btn archive" id="bulkArchiveBtn" onclick="bulkAction('archive')">В архив</button>
+  <button class="bulk-btn archive" id="bulkUnarchiveBtn" onclick="bulkAction('unarchive')" style="display:none">Восстановить</button>
+  <button class="bulk-btn del" onclick="bulkAction('delete')">Удалить</button>
+  <button class="bulk-btn cancel" onclick="toggleBulkMode()">Отмена</button>
+</div>
+
+<!-- Cards -->
+<div class="cards" id="cardsContainer"></div>
+
+<!-- Preview Modal -->
+<div class="preview-backdrop" id="previewModal" onclick="closePreview()">
+  <div class="preview-box" onclick="event.stopPropagation()">
+    <div class="preview-header">
+      <span class="preview-url" id="previewUrl"></span>
+      <button class="preview-btn-open" onclick="window.open(document.getElementById('previewUrl').textContent,'_blank')">↗ Открыть</button>
+      <button class="preview-close" onclick="closePreview()">✕</button>
+    </div>
+    <iframe class="preview-iframe" id="previewIframe" src="" loading="lazy"></iframe>
+  </div>
+</div>
+
+<!-- QR Overlay -->
+<div class="overlay-backdrop" id="qrOverlay" onclick="closeQR()">
+  <div class="qr-box" onclick="event.stopPropagation()">
+    <canvas id="qrCanvas"></canvas>
+    <div class="qr-title" id="qrTitle"></div>
+    <div class="qr-url" id="qrUrl"></div>
+    <button class="qr-close" onclick="closeQR()">Закрыть</button>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
+<div class="confirm-backdrop" id="confirmBackdrop">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Удалить лендинг?</div>
+    <div class="confirm-text" id="confirmText"></div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="closeConfirm()">Отмена</button>
+      <button class="confirm-ok" id="confirmOkBtn">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allLandings = [];
+let currentTab = 'live';
+let bulkMode = false;
+let selectedSlugs = new Set();
+
+async function init() {
+  showSkeleton();
+  await loadLandings();
+}
+
+function showSkeleton() {
+  const c = document.getElementById('cardsContainer');
+  c.innerHTML = Array(4).fill(`
+    <div style="background:#fff;border-radius:14px;border:1px solid #ebebeb;padding:16px">
+      <div style="height:3px;background:#f0f0f0;border-radius:2px;margin-bottom:16px"></div>
+      <div class="skeleton" style="height:18px;width:60%;margin-bottom:10px"></div>
+      <div class="skeleton" style="height:12px;width:40%;margin-bottom:14px"></div>
+      <div style="display:flex;gap:6px">
+        ${Array(4).fill('<div class="skeleton" style="height:28px;width:64px;border-radius:8px"></div>').join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function loadLandings() {
+  try {
+    const res = await fetch('/api/list');
+    allLandings = await res.json();
+    updateStats();
+    filterCards();
+  } catch(e) {
+    document.getElementById('cardsContainer').innerHTML = `
+      <div class="empty" style="grid-column:1/-1">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">Не удалось загрузить</div>
+        <div class="empty-sub">Проверь подключение к серверу</div>
+      </div>`;
+  }
+}
+
+function updateStats() {
+  const live = allLandings.filter(l => l.status !== 'archive').length;
+  const views = allLandings.reduce((s, l) => s + (l.views || 0), 0);
+  document.getElementById('statLive').textContent = live;
+  document.getElementById('statViews').textContent = views;
+}
+
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  // Toggle bulk buttons based on tab
+  const archBtn = document.getElementById('bulkArchiveBtn');
+  const unarchBtn = document.getElementById('bulkUnarchiveBtn');
+  if (archBtn && unarchBtn) {
+    archBtn.style.display = tab === 'archive' ? 'none' : '';
+    unarchBtn.style.display = tab === 'archive' ? '' : 'none';
+  }
+  filterCards();
+}
+
+let themeFilter = '';
+function setThemeFilter(theme, el) {
+  themeFilter = themeFilter === theme ? '' : theme;
+  document.querySelectorAll('.theme-filter-btn').forEach(b => b.classList.remove('active'));
+  if (themeFilter) el.classList.add('active');
+  filterCards();
+}
+
+function filterCards() {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase();
+  const list = allLandings.filter(l => {
+    const matchTab = currentTab === 'all' ? true : currentTab === 'archive' ? l.status === 'archive' : l.status !== 'archive';
+    const matchQ = !q || (l.slug||'').includes(q) || (l.product_name||'').toLowerCase().includes(q) || (l.label||'').toLowerCase().includes(q);
+    const matchTheme = !themeFilter || themeOf(l) === themeFilter;
+    return matchTab && matchQ && matchTheme;
+  });
+  renderCards(list);
+}
+
+function renderCards(list) {
+  const c = document.getElementById('cardsContainer');
+  if (!list.length) {
+    c.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">Ничего не найдено</div>
+      <div class="empty-sub">Попробуй другой фильтр или создай первый лендинг</div>
+    </div>`;
+    return;
+  }
+  c.innerHTML = list.map(l => cardHTML(l)).join('');
+  setupSwipe();
+}
+
+function themeOf(l) {
+  if (l.theme) return l.theme;
+  const s = l.slug || '';
+  if (s.includes('octopus-glass') || s.includes('glass')) return 'octopus-glass';
+  if (s.includes('octopus')) return 'octopus';
+  return 'telegraph';
+}
+
+function cardHTML(l) {
+  const isArchived = l.status === 'archive';
+  const theme = themeOf(l);
+  const date = new Date(l.created * 1000).toLocaleDateString('ru-RU', {day:'2-digit', month:'short'});
+  const labelBadge = l.label ? `<span class="label-badge">${esc(l.label)}</span>` : '';
+  const checked = selectedSlugs.has(l.slug) ? 'checked' : '';
+  return `
+  <div class="swipe-wrapper" data-slug="${esc(l.slug)}">
+    <div class="swipe-bg"></div>
+    <div class="card-inner">
+      <div class="card ${isArchived ? 'archived' : ''}">
+        <div class="card-checkbox-wrap">
+          <input type="checkbox" class="card-checkbox" ${checked} onchange="toggleSelect('${esc(l.slug)}', this.checked)" />
+        </div>
+        <div class="card-accent-bar ${theme} ${isArchived ? 'archived' : ''}"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-name">${esc(l.product_name || l.slug)}</div>
+            <span class="badge ${theme}">${theme}</span>
+          </div>
+          <div class="card-meta">
+            <span class="status-pill ${isArchived ? 'archive' : 'live'}">
+              <span class="status-dot"></span>${isArchived ? 'Архив' : 'Активный'}
+            </span>
+            <span class="meta-sep">·</span>
+            <span class="card-date">${date}</span>
+            <span class="meta-sep">·</span>
+            <span class="card-views">👁 ${l.views||0}</span>
+            ${labelBadge ? '<span class="meta-sep">·</span>' + labelBadge : ''}
+          </div>
+          <div class="card-slug">${esc(l.slug)}</div>
+          <div class="card-actions">
+            <button class="btn accent" onclick="showPreview('${esc(l.url)}')">⊡ Preview</button>
+            <button class="btn" onclick="window.open('${esc(l.url)}','_blank')">↗ Открыть</button>
+            <button class="btn" onclick="copyUrl('${esc(l.url)}', this)">⎘ Копировать</button>
+            <button class="btn" onclick="showQR('${esc(l.url)}','${esc(l.product_name||l.slug)}')">⊞ QR</button>
+            <button class="btn" onclick="toggleEdit('${esc(l.slug)}')">✎ Изменить</button>
+            <button class="btn" onclick="duplicateLanding('${esc(l.slug)}', this)" title="Дублировать лендинг">⊕</button>
+            <a class="btn export" href="/api/export/${esc(l.slug)}" download="${esc(l.slug)}.zip" title="Скачать ZIP">⬇ ZIP</a>
+            <button class="btn danger" onclick="confirmDelete('${esc(l.slug)}')">✕</button>
+          </div>
+        </div>
+        <div class="card-edit" id="edit-${esc(l.slug)}">
+          <div class="edit-row">
+            <span class="edit-label">Метка</span>
+            <input class="edit-input" id="label-${esc(l.slug)}" value="${esc(l.label||'')}" placeholder="Aporia Labs, MedBuddy..."/>
+          </div>
+          <div class="edit-row">
+            <span class="edit-label">Статус</span>
+            <select class="edit-select" id="status-${esc(l.slug)}">
+              <option value="live" ${!isArchived?'selected':''}>● Активный</option>
+              <option value="archive" ${isArchived?'selected':''}>○ Архив</option>
+            </select>
+            <button class="save-btn" onclick="saveMeta('${esc(l.slug)}')">Сохранить</button>
+          </div>
+        </div>
+        <div class="content-edit-section" id="content-edit-${esc(l.slug)}">
+          <div class="content-section-label">✦ Редактировать контент</div>
+          <div class="content-field">
+            <label>Название продукта</label>
+            <input type="text" id="cf-product_name-${esc(l.slug)}" placeholder="Загрузка..." disabled />
+          </div>
+          <div class="content-field">
+            <label>Tagline строка 1</label>
+            <input type="text" id="cf-tagline_line1-${esc(l.slug)}" placeholder="Загрузка..." disabled />
+          </div>
+          <div class="content-field">
+            <label>Tagline строка 2</label>
+            <input type="text" id="cf-tagline_line2-${esc(l.slug)}" placeholder="Загрузка..." disabled />
+          </div>
+          <div class="content-field">
+            <label>Подзаголовок</label>
+            <textarea rows="2" id="cf-subtitle-${esc(l.slug)}" placeholder="Загрузка..." disabled></textarea>
+          </div>
+          <div class="content-field">
+            <label>Команда установки</label>
+            <input type="text" id="cf-install_command-${esc(l.slug)}" placeholder="npm install ..." disabled />
+          </div>
+          <div class="content-field">
+            <label>Акцентный цвет</label>
+            <input type="text" id="cf-color_accent-${esc(l.slug)}" placeholder="#6C63FF" disabled />
+          </div>
+          <div class="content-actions-row">
+            <button class="content-save-btn" id="csave-${esc(l.slug)}" onclick="saveContent('${esc(l.slug)}')" disabled>Сохранить и перерендерить</button>
+            <span class="content-status" id="cstatus-${esc(l.slug)}"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toggleEdit(slug) {
+  const editPanel = document.getElementById('edit-'+slug);
+  const contentPanel = document.getElementById('content-edit-'+slug);
+  if (!editPanel) return;
+  const opening = !editPanel.classList.contains('open');
+  editPanel.classList.toggle('open');
+  if (opening) {
+    // Also open content edit and load it
+    if (contentPanel && !contentPanel.classList.contains('open')) {
+      contentPanel.classList.add('open');
+      loadContent(slug);
+    }
+  } else {
+    contentPanel?.classList.remove('open');
+  }
+}
+
+async function loadContent(slug) {
+  const fields = ['product_name','tagline_line1','tagline_line2','subtitle','install_command','color_accent'];
+  try {
+    const res = await fetch('/api/content/'+slug);
+    if (!res.ok) throw new Error('not found');
+    const data = await res.json();
+    const c = data.content || {};
+    fields.forEach(f => {
+      const el = document.getElementById(`cf-${f}-${slug}`);
+      if (!el) return;
+      el.value = c[f] || '';
+      el.disabled = false;
+    });
+    const saveBtn = document.getElementById('csave-'+slug);
+    if (saveBtn) saveBtn.disabled = false;
+  } catch(e) {
+    fields.forEach(f => {
+      const el = document.getElementById(`cf-${f}-${slug}`);
+      if (el) { el.placeholder = 'Нет данных'; }
+    });
+  }
+}
+
+async function saveContent(slug) {
+  const fields = ['product_name','tagline_line1','tagline_line2','subtitle','install_command','color_accent'];
+  const updates = {};
+  fields.forEach(f => {
+    const el = document.getElementById(`cf-${f}-${slug}`);
+    if (el) updates[f] = el.value;
+  });
+  const btn = document.getElementById('csave-'+slug);
+  const st = document.getElementById('cstatus-'+slug);
+  if (btn) btn.disabled = true;
+  if (st) { st.className = 'content-status'; st.textContent = '⏳'; }
+  try {
+    const res = await fetch('/api/content/'+slug, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(updates)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      if (st) { st.className = 'content-status ok'; st.textContent = '✓ Сохранено'; }
+      // Update product_name in allLandings
+      const i = allLandings.findIndex(l => l.slug === slug);
+      if (i >= 0 && updates.product_name) allLandings[i].product_name = updates.product_name;
+    } else {
+      if (st) { st.className = 'content-status err'; st.textContent = '✕ ' + (data.error||'Ошибка'); }
+    }
+  } catch(e) {
+    if (st) { st.className = 'content-status err'; st.textContent = '✕ Нет связи'; }
+  }
+  if (btn) btn.disabled = false;
+  setTimeout(() => { if (st) st.textContent = ''; }, 3000);
+}
+
+async function duplicateLanding(slug, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  try {
+    const res = await fetch(`/api/slug/${slug}/duplicate`, {method:'POST'});
+    const data = await res.json();
+    if (data.ok) {
+      btn.textContent = '✓';
+      btn.style.color = '#22c55e';
+      await loadLandings();
+      setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.disabled = false; }, 1500);
+    } else {
+      btn.textContent = '✕';
+      btn.style.color = '#ef4444';
+      setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.disabled = false; }, 1500);
+    }
+  } catch(e) {
+    btn.textContent = orig; btn.disabled = false;
+  }
+}
+
+function toggleBulkMode() {
+  bulkMode = !bulkMode;
+  selectedSlugs.clear();
+  document.getElementById('bulkToggle').classList.toggle('active', bulkMode);
+  document.getElementById('bulkBar').classList.toggle('open', false);
+  document.getElementById('cardsContainer').classList.toggle('bulk-mode', bulkMode);
+  filterCards();
+}
+
+function toggleSelect(slug, checked) {
+  if (checked) selectedSlugs.add(slug);
+  else selectedSlugs.delete(slug);
+  const n = selectedSlugs.size;
+  document.getElementById('bulkCount').textContent = `${n} выбрано`;
+  document.getElementById('bulkBar').classList.toggle('open', n > 0);
+}
+
+async function bulkAction(action) {
+  const slugs = [...selectedSlugs];
+  if (!slugs.length) return;
+  if (action === 'delete' && !confirm(`Удалить ${slugs.length} лендингов? Это необратимо.`)) return;
+  try {
+    await fetch('/api/bulk', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action, slugs})
+    });
+    selectedSlugs.clear();
+    if (action === 'delete') allLandings = allLandings.filter(l => !slugs.includes(l.slug));
+    else slugs.forEach(s => { const i = allLandings.findIndex(l => l.slug===s); if (i>=0) allLandings[i].status = action==='archive'?'archive':'live'; });
+    updateStats();
+    filterCards();
+    document.getElementById('bulkBar').classList.remove('open');
+  } catch(e) { alert('Ошибка'); }
+}
+
+async function saveMeta(slug) {
+  const label = document.getElementById('label-'+slug).value;
+  const status = document.getElementById('status-'+slug).value;
+  try {
+    await fetch('/api/meta/'+slug, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({label, status})
+    });
+    const i = allLandings.findIndex(l => l.slug === slug);
+    if (i >= 0) { allLandings[i].label = label; allLandings[i].status = status; }
+    updateStats();
+    filterCards();
+  } catch(e) { alert('Ошибка сохранения'); }
+}
+
+async function copyUrl(url, btn) {
+  try {
+    await navigator.clipboard.writeText(url);
+    const orig = btn.textContent;
+    btn.textContent = '✓ Скопировано';
+    btn.style.color = '#22c55e';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1800);
+  } catch(e) { prompt('Скопируй ссылку:', url); }
+}
+
+function confirmDelete(slug) {
+  document.getElementById('confirmText').textContent = `Лендинг "${slug}" будет удалён безвозвратно.`;
+  document.getElementById('confirmOkBtn').onclick = () => deleteLanding(slug);
+  document.getElementById('confirmBackdrop').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirmBackdrop').classList.remove('open'); }
+
+async function deleteLanding(slug) {
+  closeConfirm();
+  try {
+    await fetch('/api/slug/'+slug, {method:'DELETE'});
+    allLandings = allLandings.filter(l => l.slug !== slug);
+    updateStats(); filterCards();
+  } catch(e) { alert('Ошибка удаления'); }
+}
+
+function showQR(url, name) {
+  document.getElementById('qrTitle').textContent = name;
+  document.getElementById('qrUrl').textContent = url;
+  document.getElementById('qrOverlay').classList.add('open');
+  const canvas = document.getElementById('qrCanvas');
+  QRCode.toCanvas(canvas, url, {width: 200, margin: 1});
+}
+function closeQR() { document.getElementById('qrOverlay').classList.remove('open'); }
+
+async function generateLanding() {
+  const desc = document.getElementById('genDesc').value.trim();
+  const theme = document.getElementById('genTheme').value;
+  if (!desc) { document.getElementById('genStatus').textContent = '← Введи описание'; return; }
+  const btn = document.getElementById('genBtn');
+  const st = document.getElementById('genStatus');
+  btn.disabled = true;
+  st.className = 'gen-status';
+  st.textContent = '⏳ Генерирую...';
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({description: desc, theme})
+    });
+    const data = await res.json();
+    if (data.url) {
+      st.className = 'gen-status ok';
+      st.textContent = `✓ ${data.product_name} — готово!`;
+      document.getElementById('genDesc').value = '';
+      await loadLandings();
+    } else {
+      st.className = 'gen-status err';
+      st.textContent = '✕ ' + (data.error || 'Ошибка');
+    }
+  } catch(e) {
+    st.className = 'gen-status err';
+    st.textContent = '✕ Нет связи с сервером';
+  }
+  btn.disabled = false;
+}
+
+document.getElementById('genDesc').addEventListener('keydown', e => { if (e.key === 'Enter') generateLanding(); });
+
+function setupSwipe() {
+  document.querySelectorAll('.swipe-wrapper').forEach(w => {
+    let sx = 0, dx = 0, active = false;
+    const inner = w.querySelector('.card-inner');
+    const slug = w.dataset.slug;
+    w.addEventListener('touchstart', e => { sx = e.touches[0].clientX; active = true; }, {passive:true});
+    w.addEventListener('touchmove', e => {
+      if (!active) return;
+      dx = e.touches[0].clientX - sx;
+      if (dx < 0) inner.style.transform = `translateX(${Math.max(dx,-80)}px)`;
+    }, {passive:true});
+    w.addEventListener('touchend', () => {
+      active = false;
+      if (dx < -50) { inner.style.transform = 'translateX(-80px)'; setTimeout(() => confirmDelete(slug), 150); }
+      else inner.style.transform = '';
+      dx = 0;
+    });
+  });
+}
+
+const QRCode = {
+  toCanvas(canvas, text, opts) {
+    const s = opts.width || 200;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const ctx = canvas.getContext('2d');
+      canvas.width = s; canvas.height = s;
+      ctx.drawImage(img, 0, 0, s, s);
+    };
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${s}x${s}&margin=10&data=${encodeURIComponent(text)}`;
+  }
+};
+
+function showPreview(url) {
+  document.getElementById('previewUrl').textContent = url;
+  document.getElementById('previewIframe').src = url;
+  document.getElementById('previewModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePreview() {
+  document.getElementById('previewModal').classList.remove('open');
+  document.getElementById('previewIframe').src = '';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+init();
+</script>
+</body>
+</html>
